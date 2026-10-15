@@ -1,0 +1,15 @@
+Actives: 99   Decoys: 980   (ratio 1:9.9)
+Pool molecules rejected for being too similar to a known active: 2,148
+
+property    actives mean+-sd      decoys mean+-sd       
+mw            524.18 +- 101.15      498.11 +- 75.42   
+logp            2.74 +- 1.73          2.94 +- 1.31    
+hbd             2.88 +- 1.53          2.30 +- 0.87    
+hba             6.26 +- 2.15          5.36 +- 1.18    
+rb              7.33 +- 3.52          7.17 +- 2.42    
+charge          0.01 +- 0.10          0.00 +- 0.00    
+
+Decoy max similarity to any known inhibitor: mean 0.32, highest 0.35 (limit 0.35)
+
+1 actives got fewer than 10 decoys (unusual charge or size; a bigger pool fixes this):
+  COC(=O)CC1COc2c(cc3c: 0

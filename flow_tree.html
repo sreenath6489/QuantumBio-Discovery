@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid AI-Quantum Discovery Flow Tree</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --node-bg: #111827;
+            --border-inactive: rgba(255, 255, 255, 0.15);
+            --border-active: #6366f1;
+            --accent-color: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 40px 20px 120px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Floating Action Button fixed on bottom-right */
+        .fab-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .btn {
+            background: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 6px 20px var(--accent-glow);
+            transition: transform 0.2s ease, background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(8px);
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            background: #4f46e5;
+        }
+
+        /* Tree Flow Layout */
+        .tree-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            max-width: 650px;
+            width: 100%;
+        }
+
+        /* Flow Node Card */
+        .flow-node {
+            width: 100%;
+            background: var(--node-bg);
+            border: 2px solid var(--border-inactive);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 15px 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0.25;
+            transform: translateY(15px);
+            transition: all 0.4s ease-in-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+        }
+
+        .flow-node.active {
+            opacity: 1;
+            transform: translateY(0);
+            border-color: var(--border-active);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .node-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .node-icon {
+            font-size: 1.8rem;
+            margin-right: 15px;
+            background: rgba(99, 102, 241, 0.15);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .node-title-group h3 {
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .node-step {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+
+        .node-body p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin-top: 8px;
+        }
+
+        .node-badge {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        /* Arrow indicator between nodes */
+        .node-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.2);
+            margin: 2px 0;
+            z-index: 2;
+            transition: color 0.3s ease;
+        }
+
+        .flow-node.active+.node-arrow {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Pipeline Architecture & Flow Tree</h1>
+        <p>Click the floating button on the bottom right to reveal each step sequentially</p>
+    </header>
+
+    <!-- Floating Action Button -->
+    <div class="fab-container">
+        <button class="btn" onclick="revealNextStep()">
+            <span>Next Step</span> 
+        </button>
+    </div>
+
+    <div class="tree-container">
+
+        <!-- Node 1 -->
+        <div class="flow-node active" data-index="0">
+            <div class="node-header">
+                <div class="node-icon">01</div>
+                <div class="node-title-group">
+                    <div class="node-step">Phase 01</div>
+                    <h3>3D Structure Initialization</h3>
+                </div>
+            </div>
+            <div class="node-body">
+                <p>Loading spatial coordinate geometry of the SARS-CoV-2 Main Protease (Mpro) target protein bound with
+                    the Nirmatrelvir reference drug.</p>
+                <span class="node-badge">Protein + Drug Loaded</span>
+            </div>
+        </div>
+
+        <div class="node-arrow">↓</div>
+
+        <!-- Node 2 -->
+        <div class="flow-node" data-index="1">
+            <div class="node-header">
+                <div class="node-icon">02</div>
+                <div class="node-title-group">
+                    <div class="node-step">Phase 02</div>
+                    <h3>Master Dataset Composition</h3>
+                </div>
+            </div>
+            <div class="node-body">
+                <p>Aggregating 1,100 total compounds consisting of 100 real active Mpro inhibitors and 1,000 engineered
+                    decoys, verified for property fairness.</p>
+                <span class="node-badge">1,100 Total Molecules</span>
+            </div>
+        </div>
+
+        <div class="node-arrow">↓</div>
+
+        <!-- Node 3 -->
+        <div class="flow-node" data-index="2">
+            <div class="node-header">
+                <div class="node-icon">03</div>
+                <div class="node-title-group">
+                    <div class="node-step">Phase 03</div>
+                    <h3>Auto-Docking Filter</h3>
+                </div>
+            </div>
+            <div class="node-body">
+                <p>Classical docking filters down candidates. Classical scoring has a blind spot—missing electronic
+                    details—placing the reference drug at <strong>Rank #44</strong>.</p>
+                <span class="node-badge">Classical Blind Spot (Rank 44)</span>
+            </div>
+        </div>
+
+        <div class="node-arrow">↓</div>
+
+        <!-- Node 4 -->
+        <div class="flow-node" data-index="3">
+            <div class="node-header">
+                <div class="node-icon">04</div>
+                <div class="node-title-group">
+                    <div class="node-step">Phase 04</div>
+                    <h3>Random Forest ML Screening</h3>
+                </div>
+            </div>
+            <div class="node-body">
+                <p>Machine learning fingerprint analysis rapidly filters chemical features and predicts initial binding
+                    affinities across candidate subsets.</p>
+                <span class="node-badge">ML Feature Screening</span>
+            </div>
+        </div>
+
+        <div class="node-arrow">↓</div>
+
+        <!-- Node 5 -->
+        <div class="flow-node" data-index="4">
+            <div class="node-header">
+                <div class="node-icon">05</div>
+                <div class="node-title-group">
+                    <div class="node-step">Phase 05</div>
+                    <h3>Qiskit Aer Quantum Rescoring</h3>
+                </div>
+            </div>
+            <div class="node-body">
+                <p>Quantum circuit simulation calculates true electronic polarization, covalent warhead binding energy,
+                    and electrostatic stabilization.</p>
+                <span class="node-badge">Qiskit Aer Simulator Active</span>
+            </div>
+        </div>
+
+        <div class="node-arrow">↓</div>
+
+        <!-- Node 6 -->
+        <div class="flow-node" data-index="5">
+            <div class="node-header">
+                <div class="node-icon">06</div>
+                <div class="node-title-group">
+                    <div class="node-step">Phase 06</div>
+                    <h3>Final Elite Top 30 Shortlist</h3>
+                </div>
+            </div>
+            <div class="node-body">
+                <p>Proof of concept verified: Reference drug successfully recovered into the elite <strong>Top 30
+                        shortlist</strong> for physical wet-lab validation.</p>
+                <span class="node-badge">Ready for Lab Scientists</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const nodes = document.querySelectorAll('.flow-node');
+        let currentIndex = 0;
+
+        function revealNextStep() {
+            if (currentIndex < nodes.length - 1) {
+                currentIndex++;
+                nodes[currentIndex].classList.add('active');
+                nodes[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // Optional loop back or notification when reaching the end
+                alert("You have reached the final elite shortlist stage!");
+            }
+        }
+
+        // Allow clicking any individual card to jump straight to it
+        nodes.forEach((node, idx) => {
+            node.addEventListener('click', () => {
+                currentIndex = idx;
+                for (let i = 0; i <= idx; i++) {
+                    nodes[i].classList.add('active');
+                }
+                node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+        });
+    </script>
+</body>
+
+</html>

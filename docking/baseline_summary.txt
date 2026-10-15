@@ -1,0 +1,12 @@
+Docked and scored: 218 molecules (18 actives, 200 decoys); 0 failed and were skipped.
+
+Vina AUC: 0.46      (0.50 = random, 1.00 = perfect)
+Size-only AUC (just counting atoms): 0.53   <- Vina should beat this
+
+Enrichment (how many times better than picking at random):
+  top  1% (  3 molecules):  0 actives found -> EF 0.0x
+  top  5% ( 11 molecules):  0 actives found -> EF 0.0x
+  top 10% ( 22 molecules):  2 actives found -> EF 1.1x
+  (best possible EF at 10% here is about 10.0x)
+
+Nirmatrelvir (reference): score -8.62, rank 44 of 218 (top 20%)
