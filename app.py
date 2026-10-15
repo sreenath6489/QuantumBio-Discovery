@@ -27,6 +27,14 @@ try:
 except ImportError:
     RDKIT_AVAILABLE = False
 
+# py3Dmol & stmol imports
+try:
+    import py3Dmol
+    from stmol import showmol
+    STMOL_AVAILABLE = True
+except ImportError:
+    STMOL_AVAILABLE = False
+
 # -----------------------------------------------------------------------------
 # 1. PAGE CONFIGURATION & STYLING
 # -----------------------------------------------------------------------------
@@ -39,254 +47,44 @@ st.set_page_config(
 
 CUSTOM_CSS = """
 <style>
-/* Base Dark Scientific Theme */
+/* Import Ultra-Modern Typefaces */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Base Design Tokens */
 :root {
-    --bg-dark: #090d16;
-    --card-bg: rgba(17, 24, 39, 0.75);
-    --card-border: rgba(56, 189, 248, 0.18);
-    --accent-cyan: #00f0ff;
+    --bg-dark: #05070f;
+    --card-bg-glass: rgba(255, 255, 255, 0.02);
+    --card-border-glass: rgba(255, 255, 255, 0.07);
+    --card-border-hover: rgba(56, 189, 248, 0.4);
+    --accent-cyan: #38bdf8;
+    --accent-blue: #0284c7;
     --accent-teal: #10b981;
     --accent-gold: #fbbf24;
     --accent-purple: #818cf8;
 }
 
-/* Global modifications */
+* {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Global Cosmic Canvas with Ambient Glow Spheres */
 .stApp {
-    background: radial-gradient(circle at 15% 15%, #0f172a 0%, #090d16 100%);
+    background-color: #05070e !important;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.12) 0px, transparent 45%),
+        radial-gradient(at 100% 0%, rgba(129, 140, 248, 0.12) 0px, transparent 45%),
+        radial-gradient(at 50% 50%, rgba(99, 102, 241, 0.05) 0px, transparent 55%),
+        radial-gradient(at 15% 85%, rgba(16, 185, 129, 0.08) 0px, transparent 40%),
+        radial-gradient(at 85% 85%, rgba(217, 70, 239, 0.06) 0px, transparent 40%) !important;
+    background-attachment: fixed !important;
     color: #f1f5f9;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Header Banner */
-.hero-header {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(99, 102, 241, 0.15) 50%, rgba(16, 185, 129, 0.08) 100%);
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: 14px;
-    padding: 22px 28px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-}
-.hero-title {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(90deg, #38bdf8 0%, #818cf8 50%, #34d399 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin: 0 0 8px 0;
-}
-.hero-subtitle {
-    font-size: 14px;
-    color: #94a3b8;
-    margin: 0;
-    line-height: 1.5;
-}
-.hero-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-}
-.tag-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.3px;
-}
-.tag-cyan { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; }
-.tag-purple { background: rgba(129, 140, 248, 0.15); border: 1px solid rgba(129, 140, 248, 0.35); color: #a5b4fc; }
-.tag-emerald { background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.35); color: #34d399; }
-.tag-gold { background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; }
-
-/* Custom KPI Metric Cards */
-.kpi-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-}
-.kpi-card {
-    background: rgba(17, 24, 39, 0.7);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    border-radius: 12px;
-    padding: 16px 18px;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.25s ease;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-.kpi-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(56, 189, 248, 0.45);
-    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.15);
-}
-.kpi-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #94a3b8;
-    margin-bottom: 6px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.kpi-value {
-    font-size: 24px;
-    font-weight: 800;
-    color: #f8fafc;
-    line-height: 1.2;
-}
-.kpi-desc {
-    font-size: 11px;
-    color: #64748b;
-    margin-top: 4px;
-}
-.kpi-icon {
-    font-size: 18px;
-}
-
-/* Tooltip Styling */
-.tooltip-trigger {
-    position: relative;
-    cursor: help;
-    display: inline-flex;
-    align-items: center;
-    color: #38bdf8;
-    font-size: 12px;
-}
-.tooltip-trigger:hover::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 125%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #0f172a;
-    color: #e2e8f0;
-    border: 1px solid #38bdf8;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    white-space: normal;
-    min-width: 180px;
-    max-width: 260px;
-    z-index: 1000;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.6);
-    pointer-events: none;
-    line-height: 1.35;
-}
-
-/* Viewer Frame */
-.viewer-box {
-    background: #0b0f19;
-    border: 1px solid rgba(56, 189, 248, 0.25);
-    border-radius: 12px;
-    padding: 8px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-}
-
-/* Chemical Card */
-.chem-card {
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid rgba(56, 189, 248, 0.2);
-    border-radius: 12px;
-    padding: 18px;
-    backdrop-filter: blur(10px);
-}
-.prop-pill {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 11px;
-    display: inline-block;
-    margin: 2px 4px 2px 0;
-}
-.prop-val {
-    font-weight: 700;
-    color: #38bdf8;
-}
-
-/* Dataframe container & Glide Data Grid */
-[data-testid="stDataFrame"], 
-[data-testid="stDataFrame"] > div {
-    background-color: #0b0f19 !important;
-    border-radius: 8px !important;
-}
-
-/* Dark styled buttons & download buttons */
-.stButton > button, 
-.stDownloadButton > button {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
-    color: #38bdf8 !important;
-    border: 1px solid rgba(56, 189, 248, 0.4) !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    padding: 8px 16px !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4) !important;
-    transition: all 0.2s ease !important;
-}
-.stButton > button:hover, 
-.stDownloadButton > button:hover {
-    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
-    color: #ffffff !important;
-    border-color: #38bdf8 !important;
-    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.3) !important;
-    transform: translateY(-1px) !important;
-}
-
-/* Dark Selectbox & Inputs */
-div[data-baseweb="select"], 
-div[data-baseweb="select"] > div {
-    background-color: #111827 !important;
-    color: #f1f5f9 !important;
-    border-color: rgba(56, 189, 248, 0.3) !important;
-    border-radius: 8px !important;
-}
-div[data-baseweb="select"] * {
-    color: #f1f5f9 !important;
-}
-div[data-baseweb="popover"], 
-ul[role="listbox"] {
-    background-color: #111827 !important;
-    border: 1px solid rgba(56, 189, 248, 0.3) !important;
-}
-li[role="option"] {
-    background-color: #111827 !important;
-    color: #f1f5f9 !important;
-}
-li[role="option"]:hover, 
-li[aria-selected="true"] {
-    background-color: #1e293b !important;
-    color: #38bdf8 !important;
-}
-
-/* Dark Text Inputs */
-div[data-baseweb="input"],
-div[data-baseweb="input"] > input {
-    background-color: #111827 !important;
-    color: #f1f5f9 !important;
-    border-color: rgba(56, 189, 248, 0.3) !important;
-    border-radius: 8px !important;
-}
-
-/* Clean Dark Code Blocks & SMILES pills */
-code, 
-.chem-card code, 
-[data-testid="stMarkdown"] code {
-    background-color: #0b0f19 !important;
-    color: #34d399 !important;
-    border: 1px solid rgba(52, 211, 153, 0.25) !important;
-    padding: 3px 8px !important;
-    border-radius: 5px !important;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+/* Main Container Layout */
+.block-container {
+    padding-top: 1.8rem !important;
+    padding-bottom: 4rem !important;
+    max-width: 1400px !important;
 }
 
 /* Header & Sidebar overrides */
@@ -294,52 +92,483 @@ header[data-testid="stHeader"] {
     background: transparent !important;
 }
 [data-testid="stSidebar"] {
-    background-color: #090d16 !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(6, 9, 18, 0.65) !important;
+    backdrop-filter: blur(30px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(190%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+[data-testid="stSidebar"] hr {
+    border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Custom Interactive Segmented Tab Navigation Bar */
+/* Hero Header Banner */
+.hero-header {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    padding: 28px 34px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+.hero-header::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), rgba(129, 140, 248, 0.8), transparent);
+}
+.hero-title {
+    font-size: 27px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.6px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #818cf8 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    margin: 0 0 10px 0 !important;
+}
+.hero-subtitle {
+    font-size: 14px !important;
+    color: #94a3b8 !important;
+    margin: 0 !important;
+    line-height: 1.6 !important;
+    max-width: 950px !important;
+}
+.hero-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+.tag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all 0.2s ease;
+}
+.tag-cyan { 
+    background: rgba(56, 189, 248, 0.08) !important; 
+    border: 1px solid rgba(56, 189, 248, 0.3) !important; 
+    color: #38bdf8 !important; 
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.15) !important;
+}
+.tag-purple { 
+    background: rgba(129, 140, 248, 0.08) !important; 
+    border: 1px solid rgba(129, 140, 248, 0.3) !important; 
+    color: #a5b4fc !important; 
+    box-shadow: 0 0 15px rgba(129, 140, 248, 0.15) !important;
+}
+.tag-emerald { 
+    background: rgba(52, 211, 153, 0.08) !important; 
+    border: 1px solid rgba(52, 211, 153, 0.3) !important; 
+    color: #34d399 !important; 
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.15) !important;
+}
+.tag-gold { 
+    background: rgba(251, 191, 36, 0.08) !important; 
+    border: 1px solid rgba(251, 191, 36, 0.3) !important; 
+    color: #fbbf24 !important; 
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.15) !important;
+}
+
+/* Custom KPI Metric Cards (Floating Translucent Glass Tiles) */
+.kpi-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+.kpi-card {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;
+    border-radius: 18px !important;
+    padding: 20px 22px !important;
+    position: relative !important;
+    overflow: hidden !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+.kpi-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.6), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.kpi-card:hover {
+    transform: translateY(-4px) !important;
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35), 0 0 25px rgba(56, 189, 248, 0.15) !important;
+    background: rgba(255, 255, 255, 0.035) !important;
+}
+.kpi-card:hover::before {
+    opacity: 1;
+}
+.kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.kpi-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+.kpi-desc {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 6px;
+}
+
+/* Tooltip Trigger */
+.tooltip-trigger {
+    position: relative;
+    cursor: help;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    font-size: 11px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+.tooltip-trigger:hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+.tooltip-trigger:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 135%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(8, 12, 22, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    color: #f1f5f9;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 400;
+    white-space: normal;
+    min-width: 200px;
+    max-width: 280px;
+    z-index: 1000;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(56, 189, 248, 0.2);
+    pointer-events: none;
+    line-height: 1.45;
+}
+
+/* Custom Segmented Glass Capsule Bar for Tabs & Radios */
 div[data-testid="stRadio"] > div[role="radiogroup"] {
     display: flex !important;
     flex-wrap: wrap !important;
     gap: 8px !important;
-    background: rgba(15, 23, 42, 0.75) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
     padding: 6px !important;
-    border-radius: 12px !important;
-    border: 1px solid rgba(56, 189, 248, 0.25) !important;
-    margin-bottom: 20px !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    margin: 14px 0 24px 0 !important;
+    justify-content: center !important;
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label {
-    background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 8px !important;
-    padding: 10px 16px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 9999px !important;
+    padding: 10px 22px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     color: #94a3b8 !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    flex: 1 1 200px !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    flex: 1 1 auto !important;
     text-align: center !important;
     justify-content: center !important;
+    letter-spacing: 0.2px !important;
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
-    background: rgba(56, 189, 248, 0.15) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
     color: #38bdf8 !important;
-    border-color: rgba(56, 189, 248, 0.4) !important;
+    border-color: rgba(56, 189, 248, 0.25) !important;
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked),
 div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.3) 0%, rgba(99, 102, 241, 0.3) 100%) !important;
-    border-color: #38bdf8 !important;
-    color: #f8fafc !important;
-    box-shadow: 0 4px 16px rgba(56, 189, 248, 0.25) !important;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+    border: 1px solid rgba(56, 189, 248, 0.5) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5) !important;
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label input {
     display: none !important;
 }
 div[data-testid="stRadio"] > div[role="radiogroup"] > label > div:first-child {
     display: none !important;
+}
+
+/* 3D Viewer Container Frame */
+[data-testid="stCustomComponentV1"] {
+    background: transparent !important;
+    border-radius: 20px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    overflow: hidden !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+}
+[data-testid="stCustomComponentV1"] iframe {
+    border-radius: 20px !important;
+    background: transparent !important;
+}
+
+/* Chemical Molecule Inspector Cards */
+.chem-card {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 18px !important;
+    padding: 22px !important;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    transition: border-color 0.2s ease !important;
+}
+.chem-card:hover {
+    border-color: rgba(56, 189, 248, 0.3) !important;
+}
+.chem-card svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+.prop-pill {
+    background: rgba(255, 255, 255, 0.035) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 5px 12px !important;
+    border-radius: 9999px !important;
+    font-size: 11px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 3px 4px 3px 0 !important;
+    color: #94a3b8 !important;
+    backdrop-filter: blur(10px) !important;
+}
+.prop-val {
+    font-weight: 700 !important;
+    color: #38bdf8 !important;
+}
+
+/* Glassmorphic Callouts */
+.glass-callout {
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.55;
+}
+.glass-callout-info {
+    background: rgba(56, 189, 248, 0.035);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    color: #e2e8f0;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+.glass-callout-insight {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+.glass-callout-alert {
+    background: rgba(239, 68, 68, 0.04);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.08);
+}
+.glass-callout-gold {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%);
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 18px;
+    padding: 18px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 12px 35px rgba(251, 191, 36, 0.08);
+}
+.glass-subcard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+}
+
+/* Translucent Dataframe / Glide Data Grid */
+[data-testid="stDataFrame"], 
+[data-testid="stDataFrame"] > div,
+[data-testid="stDataFrame"] iframe {
+    background: transparent !important;
+}
+[data-testid="stDataFrame"] {
+    background: rgba(255, 255, 255, 0.015) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 6px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Glass Selectboxes & Inputs */
+div[data-baseweb="select"], 
+div[data-baseweb="select"] > div {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+div[data-baseweb="select"]:hover,
+div[data-baseweb="select"]:focus-within {
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.15) !important;
+}
+div[data-baseweb="select"] * {
+    color: #f1f5f9 !important;
+}
+div[data-baseweb="popover"], 
+ul[role="listbox"] {
+    background: rgba(8, 12, 22, 0.9) !important;
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7) !important;
+    padding: 6px !important;
+}
+li[role="option"] {
+    background: transparent !important;
+    color: #f1f5f9 !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    transition: background 0.15s ease !important;
+}
+li[role="option"]:hover, 
+li[aria-selected="true"] {
+    background: rgba(56, 189, 248, 0.18) !important;
+    color: #38bdf8 !important;
+}
+
+/* Glass Text Inputs */
+div[data-baseweb="input"],
+div[data-baseweb="input"] > input {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    color: #f1f5f9 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+}
+div[data-baseweb="input"]:focus-within {
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2) !important;
+}
+
+/* Glass Metric Cards */
+div[data-testid="stMetric"] {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Glass Buttons */
+.stButton > button, 
+.stDownloadButton > button {
+    background: rgba(56, 189, 248, 0.08) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    padding: 10px 22px !important;
+    letter-spacing: 0.2px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.stButton > button:hover, 
+.stDownloadButton > button:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+    color: #ffffff !important;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.35) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Monospace Code & SMILES */
+code, 
+.chem-card code, 
+[data-testid="stMarkdown"] code {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(52, 211, 153, 0.2) !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace !important;
+}
+
+/* Glass Expanders */
+details[data-testid="stExpander"] {
+    background: rgba(255, 255, 255, 0.02) !important;
+    backdrop-filter: blur(24px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+}
+summary[data-testid="stExpanderSummary"] {
+    border-radius: 16px !important;
 }
 </style>
 """
@@ -459,15 +688,16 @@ def render_3dmol_viewer(prot_pdb, lig_pdb, initial_mode="complex", height=580):
       <style>
         body, html {{
           margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-          background: #000000;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+          background: transparent;
+          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           color: #f1f5f9;
         }}
         #container {{
           position: relative; width: 100%; height: 100%;
-          border-radius: 10px; overflow: hidden;
-          background: #000000;
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 18px; overflow: hidden;
+          background: radial-gradient(circle at 50% 50%, #0d1527 0%, #030611 100%);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8);
         }}
         #viewer-canvas {{
           width: 100%; height: 100%; position: absolute; top: 0; left: 0;
@@ -475,37 +705,39 @@ def render_3dmol_viewer(prot_pdb, lig_pdb, initial_mode="complex", height=580):
 
         /* Top Overlay Header */
         .overlay-header {{
-          position: absolute; top: 12px; left: 14px; z-index: 10;
-          display: flex; flex-direction: column; gap: 5px; pointer-events: none;
+          position: absolute; top: 14px; left: 16px; z-index: 10;
+          display: flex; flex-direction: column; gap: 6px; pointer-events: none;
         }}
         .chip {{
           display: inline-flex; align-items: center; gap: 6px;
-          padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 700;
+          padding: 4px 12px; border-radius: 9999px; font-size: 11px; font-weight: 700;
           letter-spacing: 0.4px; text-transform: uppercase;
-          background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+          background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
         }}
-        .chip-target {{ border: 1px solid rgba(56, 189, 248, 0.5); color: #38bdf8; }}
-        .chip-ligand {{ border: 1px solid rgba(34, 197, 94, 0.5); color: #22c55e; }}
+        .chip-target {{ border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }}
+        .chip-ligand {{ border: 1px solid rgba(34, 197, 94, 0.4); color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }}
 
         /* Authentic PyMOL Object Panel (Right side) */
         .pymol-panel {{
-          position: absolute; top: 12px; right: 14px; width: 185px;
-          background: rgba(15, 20, 30, 0.92); border: 1px solid rgba(255, 255, 255, 0.18);
-          border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
-          z-index: 100; backdrop-filter: blur(12px); overflow: hidden;
+          position: absolute; top: 14px; right: 14px; width: 190px;
+          background: rgba(10, 16, 30, 0.6); border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 14px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+          z-index: 100; backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%); overflow: hidden;
         }}
         .pymol-panel-header {{
-          background: rgba(255, 255, 255, 0.08); border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 6px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase;
-          letter-spacing: 0.6px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center;
+          background: rgba(255, 255, 255, 0.04); border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 7px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+          letter-spacing: 0.8px; color: #94a3b8; display: flex; justify-content: space-between; align-items: center;
         }}
         .pymol-row {{
           display: flex; align-items: center; justify-content: space-between;
-          padding: 6px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 7px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.04);
           transition: background 0.15s ease; user-select: none;
         }}
         .pymol-row:hover {{
-          background: rgba(56, 189, 248, 0.15);
+          background: rgba(56, 189, 248, 0.12);
         }}
         .pymol-left {{
           display: flex; align-items: center; gap: 7px; flex: 1; cursor: pointer;
@@ -514,49 +746,53 @@ def render_3dmol_viewer(prot_pdb, lig_pdb, initial_mode="complex", height=580):
           font-size: 13px; color: #475569; transition: all 0.2s ease;
         }}
         .pymol-dot.active {{
-          color: #22c55e; text-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+          color: #22c55e; text-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
         }}
         .pymol-name {{
           font-size: 12px; font-weight: 600; color: #f1f5f9;
         }}
         .pymol-actions {{
-          display: flex; gap: 3px;
+          display: flex; gap: 4px;
         }}
         .pymol-btn-action {{
           font-size: 10px; font-weight: 800; color: #cbd5e1;
-          background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 3px; padding: 2px 5px; cursor: pointer; transition: all 0.15s ease;
+          background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 4px; padding: 2px 6px; cursor: pointer; transition: all 0.15s ease;
         }}
         .pymol-btn-action:hover {{
-          background: #38bdf8; color: #020617; border-color: #38bdf8;
+          background: #38bdf8; color: #020617; border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
         }}
 
-        /* Toolbar */
+        /* Floating Toolbar */
         .toolbar {{
-          position: absolute; bottom: 42px; left: 50%; transform: translateX(-50%);
+          position: absolute; bottom: 44px; left: 50%; transform: translateX(-50%);
           z-index: 95; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
-          background: rgba(15, 23, 42, 0.9); padding: 5px 12px; border-radius: 25px;
-          border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(12px);
-          box-shadow: 0 6px 25px rgba(0, 0, 0, 0.7);
+          background: rgba(10, 16, 30, 0.6); padding: 6px 14px; border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.12); backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
         }}
         .btn {{
-          background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16);
-          color: #f8fafc; padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: 600;
-          cursor: pointer; transition: all 0.18s ease; display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #f8fafc; padding: 5px 12px; border-radius: 9999px; font-size: 11px; font-weight: 600;
+          cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); display: inline-flex; align-items: center; gap: 5px;
         }}
         .btn:hover {{
           background: rgba(56, 189, 248, 0.25); border-color: rgba(56, 189, 248, 0.6);
           color: #38bdf8; transform: translateY(-1px);
+          box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
         }}
         .btn.active {{
           background: rgba(34, 197, 94, 0.25); border-color: #22c55e; color: #4ade80;
+          box-shadow: 0 4px 15px rgba(34, 197, 94, 0.25);
         }}
 
         /* PyMOL Console Bar */
         .pymol-console {{
           position: absolute; bottom: 0; left: 0; right: 0; height: 36px;
-          background: rgba(10, 15, 24, 0.96); border-top: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 3px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          background: rgba(7, 10, 20, 0.75); border-top: 1px solid rgba(255, 255, 255, 0.08);
+          backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+          padding: 3px 16px; font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
           font-size: 11px; z-index: 90; display: flex; flex-direction: column; justify-content: center;
         }}
         .pymol-console-line {{
@@ -1176,49 +1412,49 @@ st.markdown("""
     <div class="kpi-card">
         <div class="kpi-label">
             <span>Total Molecules</span>
-            <span class="tooltip-trigger" data-tooltip="100 real Mpro inhibitors + 1,000 decoys">[i]</span>
+            <span class="tooltip-trigger" data-tooltip="100 real Mpro inhibitors + 1,000 decoys">i</span>
         </div>
-        <div class="kpi-value">1,100</div>
+        <div class="kpi-value" style="color: #ffffff;">1,100</div>
         <div class="kpi-desc">Testset chemical library</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">
             <span>AI Screening Stage</span>
-            <span class="tooltip-trigger" data-tooltip="Surrogate ML model trained on pilot dockings to evaluate 1,100 molecules in seconds">[i]</span>
+            <span class="tooltip-trigger" data-tooltip="Surrogate ML model trained on pilot dockings to evaluate 1,100 molecules in seconds">i</span>
         </div>
-        <div class="kpi-value" style="color: #38bdf8;">Completed</div>
+        <div class="kpi-value" style="color: #38bdf8; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">Completed</div>
         <div class="kpi-desc">Random Forest / XGBoost surrogate</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">
             <span>Quantum Rescoring</span>
-            <span class="tooltip-trigger" data-tooltip="Electronic polarization & covalent warhead QM energy correction rescuing false negatives">[i]</span>
+            <span class="tooltip-trigger" data-tooltip="Electronic polarization & covalent warhead QM energy correction rescuing false negatives">i</span>
         </div>
-        <div class="kpi-value" style="color: #34d399;">Active</div>
+        <div class="kpi-value" style="color: #34d399; text-shadow: 0 0 15px rgba(52, 211, 153, 0.4);">Active</div>
         <div class="kpi-desc">DFT warhead polarization layer</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">
             <span>Classical Vina Rank</span>
-            <span class="tooltip-trigger" data-tooltip="AutoDock Vina alone ranked Nirmatrelvir 44th of 218 because classical forcefields lack covalent bond formation energy">[i]</span>
+            <span class="tooltip-trigger" data-tooltip="AutoDock Vina alone ranked Nirmatrelvir 44th of 218 because classical forcefields lack covalent bond formation energy">i</span>
         </div>
-        <div class="kpi-value" style="color: #f87171;">#44 / 218</div>
+        <div class="kpi-value" style="color: #f87171; text-shadow: 0 0 15px rgba(248, 113, 113, 0.3);">#44 / 218</div>
         <div class="kpi-desc">Classical Docking Baseline</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">
             <span>Quantum Rescored Rank</span>
-            <span class="tooltip-trigger" data-tooltip="Quantum covalent correction (-4.5 kcal/mol) elevated Nirmatrelvir to the #1 spot">[i]</span>
+            <span class="tooltip-trigger" data-tooltip="Quantum covalent correction (-4.5 kcal/mol) elevated Nirmatrelvir to the #1 spot">i</span>
         </div>
-        <div class="kpi-value" style="color: #fbbf24;">#1 / 1,100</div>
+        <div class="kpi-value" style="color: #fbbf24; text-shadow: 0 0 15px rgba(251, 191, 36, 0.4);">#1 / 1,100</div>
         <div class="kpi-desc">Nirmatrelvir Top Candidate</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">
             <span>Final Shortlist</span>
-            <span class="tooltip-trigger" data-tooltip="Elite Top 30 candidate molecules curated for wet-lab assay validation">[i]</span>
+            <span class="tooltip-trigger" data-tooltip="Elite Top 30 candidate molecules curated for wet-lab assay validation">i</span>
         </div>
-        <div class="kpi-value" style="color: #a855f7;">30 Finalists</div>
+        <div class="kpi-value" style="color: #c084fc; text-shadow: 0 0 15px rgba(192, 132, 252, 0.4);">30 Finalists</div>
         <div class="kpi-desc">Wet-lab synthesis ready</div>
     </div>
 </div>
@@ -1252,7 +1488,7 @@ if prot_pdb and lig_pdb:
             )
         with col_vctrl2:
             st.markdown("""
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #cbd5e1; margin-top: 8px;">
+            <div class="glass-callout glass-callout-info" style="margin-top: 24px; padding: 10px 14px; font-size: 12px;">
                 <strong>Interactive PyMOL Object Panel:</strong> Click the <code>protein</code>, <code>nirmatrelvir</code>, or <code>(pocket)</code> items in the right-side panel inside the 3D window (with <span style="color:#22c55e;">●</span> status dots and <code>[S]</code>/<code>[H]</code> buttons) to toggle models independently.
             </div>
             """, unsafe_allow_html=True)
@@ -1267,12 +1503,63 @@ if prot_pdb and lig_pdb:
 
         render_3dmol_viewer(prot_pdb, lig_pdb, initial_mode=selected_mode, height=580)
         st.markdown("""
-        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.15); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 12px; color: #94a3b8;">
+        <div class="glass-callout glass-callout-insight">
             <strong style="color:#38bdf8;">Covalent Mechanism Insight:</strong> Nirmatrelvir's terminal nitrile carbon (<code style="color:#34d399;">-C≡N</code>) forms a reversible covalent thioimidate bond with the thiolate of <strong style="color:#fbbf24;">Cys145</strong> (distance ~4.3 Å in crystallographic precursor, <1.8 Å in covalent complex), while <strong style="color:#38bdf8;">His41</strong> acts as the catalytic base. Classical forcefields treat atoms as rigid spheres with fixed point charges, completely missing this covalent transition state and scoring Nirmatrelvir artificially low.
         </div>
         """, unsafe_allow_html=True)
 else:
     st.warning("PDB structure files (`mpro_protein.pdb` or `nirmatrelvir.pdb`) could not be loaded from local directory.")
+
+st.write("")
+
+# -----------------------------------------------------------------------------
+# 8B. INTERACTIVE 3D PROTEIN-LIGAND INTERACTION VIEWER (STMOL / PY3DMOL)
+# -----------------------------------------------------------------------------
+st.subheader("🧬 Interactive 3D Protein-Ligand Interaction Viewer")
+st.markdown("Inspect the 3D binding pocket of the SARS-CoV-2 Mpro protein bound with our reference drug.")
+
+# Create columns for controls and the 3D viewer
+col1, col2 = st.columns([1, 3])
+
+with col1:
+    st.markdown("### Controls")
+    style_choice = st.selectbox("Visualization Style", ["cartoon", "stick", "sphere"], index=0, key="stmol_style_choice")
+    color_choice = st.selectbox("Color Theme", ["spectrum", "chain", "white"], index=0, key="stmol_color_choice")
+    show_surface = st.checkbox("Show Binding Surface", value=False, key="stmol_show_surface")
+
+with col2:
+    # Load Mpro PDB structure (e.g., standard SARS-CoV-2 Mpro PDB ID like '5RH2' or your custom PDB file)
+    # You can pass a PDB ID directly or read a local PDB file string:
+    pdb_id = st.text_input("Protein PDB ID", value="5RH2", key="stmol_pdb_id")
+    
+    try:
+        if STMOL_AVAILABLE:
+            # Initialize py3Dmol view (supports PDB ID query or local PDB file)
+            if os.path.exists(pdb_id):
+                with open(pdb_id, 'r') as pf:
+                    pdb_str = pf.read()
+                view = py3Dmol.view(data=pdb_str, format="pdb")
+            else:
+                view = py3Dmol.view(query=f'pdb:{pdb_id}')
+            
+            # Set protein style
+            view.setStyle({style_choice: {'color': color_choice}})
+            
+            # Highlight ligand/inhibitor if present (e.g., standard ligand view)
+            view.addStyle({'hetflag': True}, {'stick': {'colorscheme': 'yellowCarbon'}})
+            
+            if show_surface:
+                view.addSurface(py3Dmol.VDW, {'opacity': 0.7, 'color': 'lightblue'})
+                
+            view.zoomTo()
+            
+            # Render inside Streamlit using stmol
+            showmol(view, height=500, width=700)
+        else:
+            st.warning("stmol / py3Dmol packages not installed. Please run `pip install py3Dmol stmol ipython_genutils`.")
+        
+    except Exception as e:
+        st.error(f"Could not load PDB structure: {e}")
 
 st.write("")
 
@@ -1485,7 +1772,7 @@ elif selected_tab == "Tab 3: Auto-Docking Pilot Records":
             st.metric("Nirmatrelvir Score", f"{ref_vina_val:.2f} kcal/mol", delta="Rank #44 of 218", delta_color="inverse")
 
         st.markdown("""
-        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 13px;">
+        <div class="glass-callout glass-callout-alert">
             <strong style="color:#f87171;">Classical Docking Failure Mode:</strong> AutoDock Vina achieved an AUC of only <strong>0.46</strong> (worse than random guessing 0.50), finding <strong>0 actives in the top 5%</strong>. Nirmatrelvir—a billion-dollar FDA-approved drug—ranked only <strong>#44</strong> because classical docking cannot simulate the quantum covalent bond formation with Cys145.
         </div>
         """, unsafe_allow_html=True)
@@ -1495,14 +1782,32 @@ elif selected_tab == "Tab 3: Auto-Docking Pilot Records":
         chart_data["vina_score"] = pd.to_numeric(chart_data["vina_score"], errors="coerce")
         chart_data = chart_data.dropna(subset=["vina_score"])
 
-        score_chart = alt.Chart(chart_data).mark_circle(size=70, opacity=0.7).encode(
+        score_chart = alt.Chart(chart_data).mark_circle(size=70, opacity=0.75).encode(
             x=alt.X('seconds:Q', title='Docking Compute Time (seconds)'),
             y=alt.Y('vina_score:Q', title='AutoDock Vina Binding Score (kcal/mol, more negative = stronger)'),
             color=alt.Color('label:N', scale=alt.Scale(domain=['active', 'decoy'], range=['#38bdf8', '#818cf8']), title='Compound Type'),
             tooltip=['id', 'label', 'vina_score', 'seconds', 'is_reference']
         ).properties(
             height=320,
-            title="AutoDock Vina Pilot Scores vs Compute Time"
+            title="AutoDock Vina Pilot Scores vs Compute Time",
+            background='rgba(0,0,0,0)'
+        ).configure_view(
+            strokeWidth=0,
+            fill='transparent'
+        ).configure_axis(
+            gridColor='rgba(255, 255, 255, 0.05)',
+            domainColor='rgba(255, 255, 255, 0.12)',
+            tickColor='rgba(255, 255, 255, 0.12)',
+            labelColor='#94a3b8',
+            titleColor='#cbd5e1'
+        ).configure_title(
+            color='#f8fafc',
+            fontSize=14,
+            anchor='start'
+        ).configure_legend(
+            labelColor='#94a3b8',
+            titleColor='#cbd5e1',
+            fillColor='transparent'
         ).interactive()
 
         st.altair_chart(score_chart, use_container_width=True)
@@ -1559,17 +1864,17 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
             ref_q_score = ref_hits.iloc[0]["quantum_corrected_score"]
             ref_ai_score = ref_hits.iloc[0]["ai_predicted_vina_score"]
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;">
+            <div class="glass-callout glass-callout-gold">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <div>
                         <span class="tag-badge tag-gold" style="font-size:12px;">REFERENCE DRUG VALIDATION SUCCESS</span>
-                        <h3 style="margin:6px 0 2px 0; color:#f8fafc;">Nirmatrelvir (Paxlovid™) Secured Rank #{ref_rank_1}!</h3>
-                        <p style="margin:0; font-size:13px; color:#cbd5e1;">
+                        <h3 style="margin:8px 0 4px 0; color:#f8fafc; font-size:20px;">Nirmatrelvir (Paxlovid™) Secured Rank #{ref_rank_1}!</h3>
+                        <p style="margin:0; font-size:13px; color:#cbd5e1; line-height:1.5;">
                             Quantum Rescoring boosted Nirmatrelvir binding score from <strong style="color:#38bdf8;">{ref_ai_score:.2f} kcal/mol</strong> (AI baseline) to <strong style="color:#34d399;">{ref_q_score:.2f} kcal/mol</strong> (Quantum Corrected), completely reversing the classical docking ranking error.
                         </p>
                     </div>
                     <div style="text-align:right;">
-                        <span style="font-size:28px; font-weight:800; color:#fbbf24;">ΔE -4.5 kcal/mol</span><br>
+                        <span style="font-size:30px; font-weight:800; color:#fbbf24; text-shadow:0 0 15px rgba(251, 191, 36, 0.4);">ΔE -4.5 kcal/mol</span><br>
                         <span style="font-size:11px; color:#94a3b8;">Covalent Nitrile Warhead Stabilization</span>
                     </div>
                 </div>
@@ -1580,14 +1885,32 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
         chart_df = q_df.copy()
         chart_df["is_ref_label"] = chart_df["is_reference"].apply(lambda x: "Nirmatrelvir Reference" if str(x).lower() in ["yes", "true"] else "Active Finalist")
 
-        c1 = alt.Chart(chart_df).mark_bar(opacity=0.7).encode(
+        c1 = alt.Chart(chart_df).mark_bar(opacity=0.8, cornerRadiusTop=4).encode(
             x=alt.X('rank:O', title='Rank Order (Top 30)'),
             y=alt.Y('quantum_corrected_score:Q', title='Energy Score (kcal/mol, more negative = stronger)'),
             color=alt.Color('is_ref_label:N', scale=alt.Scale(domain=['Nirmatrelvir Reference', 'Active Finalist'], range=['#fbbf24', '#0ea5e9']), title='Candidate Class'),
             tooltip=['rank', 'id', 'is_ref_label', 'ai_predicted_vina_score', 'quantum_corrected_score', 'delta_qm']
         ).properties(
             height=300,
-            title="Final Quantum Corrected Scores for Top 30 Candidates (Gold = Nirmatrelvir)"
+            title="Final Quantum Corrected Scores for Top 30 Candidates (Gold = Nirmatrelvir)",
+            background='rgba(0,0,0,0)'
+        ).configure_view(
+            strokeWidth=0,
+            fill='transparent'
+        ).configure_axis(
+            gridColor='rgba(255, 255, 255, 0.05)',
+            domainColor='rgba(255, 255, 255, 0.12)',
+            tickColor='rgba(255, 255, 255, 0.12)',
+            labelColor='#94a3b8',
+            titleColor='#cbd5e1'
+        ).configure_title(
+            color='#f8fafc',
+            fontSize=14,
+            anchor='start'
+        ).configure_legend(
+            labelColor='#94a3b8',
+            titleColor='#cbd5e1',
+            fillColor='transparent'
         ).interactive()
 
         st.altair_chart(c1, use_container_width=True)
@@ -1642,8 +1965,8 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
                 st.markdown(f"""
                 <div class="chem-card">
                     <h3 style="margin:0 0 8px 0; color:#38bdf8;">Rank #{f_row['rank']}: {f_row['id']}</h3>
-                    <div style="margin-bottom:10px;">{badge_str}</div>
-                    <div style="background:rgba(255,255,255,0.04); border-radius:8px; padding:10px; margin-bottom:10px;">
+                    <div style="margin-bottom:12px;">{badge_str}</div>
+                    <div class="glass-subcard">
                         <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                             <span style="color:#94a3b8; font-size:12px;">AI Predicted Score:</span>
                             <span style="font-weight:700; color:#38bdf8;">{f_row['ai_predicted_vina_score']:.2f} kcal/mol</span>
