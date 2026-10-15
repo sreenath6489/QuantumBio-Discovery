@@ -525,7 +525,9 @@ div[data-testid="stMetric"] {
 
 /* Glass Buttons */
 .stButton > button, 
-.stDownloadButton > button {
+.stDownloadButton > button,
+.stLinkButton > a,
+[data-testid="stLinkButton"] > a {
     background: rgba(56, 189, 248, 0.08) !important;
     backdrop-filter: blur(16px) !important;
     -webkit-backdrop-filter: blur(16px) !important;
@@ -537,14 +539,28 @@ div[data-testid="stMetric"] {
     letter-spacing: 0.2px !important;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important;
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
 }
 .stButton > button:hover, 
-.stDownloadButton > button:hover {
+.stDownloadButton > button:hover,
+.stLinkButton > a:hover,
+[data-testid="stLinkButton"] > a:hover {
     background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
     color: #ffffff !important;
     border-color: #38bdf8 !important;
     box-shadow: 0 10px 30px rgba(56, 189, 248, 0.35) !important;
     transform: translateY(-2px) !important;
+    text-decoration: none !important;
+}
+.stLinkButton > a p,
+[data-testid="stLinkButton"] > a p {
+    margin: 0 !important;
+    color: inherit !important;
+    font-weight: 600 !important;
 }
 
 /* Monospace Code & SMILES */
@@ -1933,7 +1949,16 @@ elif selected_tab == "Tab 3: Auto-Docking Pilot Records":
 # TAB 4: QUANTUM RESULTS (TOP 30 SHORTLIST)
 # -----------------------------------------------------------------------------
 elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
-    st.subheader("Quantum-Rescored Elite Shortlist (Top 30 Candidates)")
+    head_q1, head_q2 = st.columns([3, 1])
+    with head_q1:
+        st.subheader("Quantum-Rescored Elite Shortlist (Top 30 Candidates)")
+    with head_q2:
+        st.link_button(
+            "Google Colab",
+            url="https://colab.research.google.com/drive/1tXU7bcSlkDJNTQsxVYl5cYpIC_E8exOA#scrollTo=ycSBve3c5wwE",
+            use_container_width=True,
+            help="Open our interactive Quantum-AI Pipeline Jupyter Notebook on Google Colab"
+        )
     st.markdown("""
     The culmination of our hybrid pipeline: an elite Top 30 candidate shortlist ranked by **Quantum-Mechanical Energy Correction**. Nirmatrelvir replicates ascend from **Rank #44** to **Ranks #1, #2, and #3**, with a **-4.5 kcal/mol** quantum stabilization bonus for the Cys145 covalent warhead.
     """)
@@ -2015,7 +2040,7 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
 
         st.dataframe(display_df[display_cols], use_container_width=True, height=360)
 
-        col_qdl1, col_qdl2 = st.columns([1, 3])
+        col_qdl1, col_qdl2, col_qdl3 = st.columns([1, 1, 2])
         with col_qdl1:
             st.download_button(
                 "Export Top 30 Shortlist (CSV)",
@@ -2023,6 +2048,13 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
                 file_name="final_quantum_shortlist.csv",
                 mime="text/csv",
                 use_container_width=True
+            )
+        with col_qdl2:
+            st.link_button(
+                "Google Colab",
+                url="https://colab.research.google.com/drive/1tXU7bcSlkDJNTQsxVYl5cYpIC_E8exOA#scrollTo=ycSBve3c5wwE",
+                use_container_width=True,
+                help="Open our interactive Quantum-AI Pipeline Jupyter Notebook on Google Colab"
             )
 
         # Detailed Finalist Inspector
