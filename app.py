@@ -605,32 +605,35 @@ def resolve_file(filename, search_dirs=None):
             return p
     return None
 
-@st.cache_data
 def load_testset_data():
-    """Loads and caches the testset CSV."""
+    """Loads the testset CSV dynamically so file updates reflect immediately."""
     path = resolve_file("mpro_testset.csv", [".", "testset"])
     if not path or not os.path.exists(path):
         return pd.DataFrame()
-    df = pd.read_csv(path)
-    return df
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()
 
-@st.cache_data
 def load_pilot_data():
-    """Loads and caches pilot docking scores."""
+    """Loads pilot docking scores dynamically so file updates reflect immediately."""
     path = resolve_file("pilot_scores.csv", [".", "docking"])
     if not path or not os.path.exists(path):
         return pd.DataFrame()
-    df = pd.read_csv(path)
-    return df
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()
 
-@st.cache_data
 def load_quantum_shortlist():
-    """Loads and caches the Top 30 Quantum-Rescored shortlist."""
+    """Loads the Top 30 Quantum-Rescored shortlist dynamically so file updates reflect immediately."""
     path = resolve_file("final_quantum_shortlist.csv", [".", "docking"])
     if not path or not os.path.exists(path):
         return pd.DataFrame()
-    df = pd.read_csv(path)
-    return df
+    try:
+        return pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame()
 
 @st.cache_data
 def load_pdb_content(filename):
@@ -1966,6 +1969,24 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
     if not df_shortlist.empty:
         q_df = df_shortlist.copy().reset_index(drop=True)
         q_df.insert(0, "rank", q_df.index + 1)
+
+        # Resilient column handling for user-provided data
+        if "id" not in q_df.columns:
+            q_df["id"] = [f"MOL_{i+1:04d}" for i in range(len(q_df))]
+        if "smiles" not in q_df.columns:
+            q_df["smiles"] = ""
+        if "is_reference" not in q_df.columns:
+            q_df["is_reference"] = "no"
+        if "quantum_corrected_score" not in q_df.columns:
+            if "score" in q_df.columns:
+                q_df["quantum_corrected_score"] = q_df["score"]
+            elif "ai_predicted_vina_score" in q_df.columns:
+                q_df["quantum_corrected_score"] = q_df["ai_predicted_vina_score"]
+            else:
+                q_df["quantum_corrected_score"] = 0.0
+        if "ai_predicted_vina_score" not in q_df.columns:
+            q_df["ai_predicted_vina_score"] = q_df["quantum_corrected_score"]
+
         q_df["delta_qm"] = q_df["quantum_corrected_score"] - q_df["ai_predicted_vina_score"]
 
         # Reference Highlight Banner
