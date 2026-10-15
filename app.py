@@ -1973,8 +1973,22 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
         # Resilient column handling for user-provided data
         if "id" not in q_df.columns:
             q_df["id"] = [f"MOL_{i+1:04d}" for i in range(len(q_df))]
-        if "smiles" not in q_df.columns:
-            q_df["smiles"] = ""
+        
+        # Auto-populate SMILES from verified testset if missing or empty
+        if "smiles" not in q_df.columns or q_df["smiles"].astype(str).str.strip().eq("").all():
+            testset_path = resolve_file("mpro_testset.csv", [".", "testset"])
+            if testset_path and os.path.exists(testset_path):
+                try:
+                    t_df = pd.read_csv(testset_path)
+                    if "id" in t_df.columns and "smiles" in t_df.columns:
+                        smiles_map = dict(zip(t_df["id"], t_df["smiles"]))
+                        q_df["smiles"] = q_df["id"].map(smiles_map).fillna("")
+                    else:
+                        q_df["smiles"] = ""
+                except Exception:
+                    q_df["smiles"] = ""
+            else:
+                q_df["smiles"] = ""
         if "is_reference" not in q_df.columns:
             q_df["is_reference"] = "no"
         if "quantum_corrected_score" not in q_df.columns:
