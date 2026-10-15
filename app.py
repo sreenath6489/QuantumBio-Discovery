@@ -1989,8 +1989,27 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
                     q_df["smiles"] = ""
             else:
                 q_df["smiles"] = ""
-        if "is_reference" not in q_df.columns:
-            q_df["is_reference"] = "no"
+        # Ensure only the record with authentic Nirmatrelvir SMILES receives the reference tag
+        target_nirmatrelvir_smiles = "CC(C)(C)[C@H](NC(=O)C(F)(F)F)C(=O)N1C[C@H]2[C@@H]([C@H]1C(=O)N[C@H](C#N)C[C@@H]1CCNC1=O)C2(C)C"
+        
+        def match_nirmatrelvir_smiles(row):
+            s = str(row.get("smiles", "")).strip()
+            if not s:
+                return False
+            if s == target_nirmatrelvir_smiles:
+                return True
+            try:
+                from rdkit import Chem
+                m1 = Chem.MolFromSmiles(s)
+                m2 = Chem.MolFromSmiles(target_nirmatrelvir_smiles)
+                if m1 and m2:
+                    return Chem.MolToSmiles(m1, canonical=True) == Chem.MolToSmiles(m2, canonical=True)
+            except Exception:
+                pass
+            return False
+
+        q_df["is_reference"] = q_df.apply(match_nirmatrelvir_smiles, axis=1)
+
         if "quantum_corrected_score" not in q_df.columns:
             if "score" in q_df.columns:
                 q_df["quantum_corrected_score"] = q_df["score"]
@@ -2004,23 +2023,25 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
         q_df["delta_qm"] = q_df["quantum_corrected_score"] - q_df["ai_predicted_vina_score"]
 
         # Reference Highlight Banner
-        ref_hits = q_df[q_df["is_reference"].astype(str).str.lower().isin(["yes", "true"])]
+        ref_hits = q_df[q_df["is_reference"] == True]
         if not ref_hits.empty:
             ref_rank_1 = ref_hits.iloc[0]["rank"]
             ref_q_score = ref_hits.iloc[0]["quantum_corrected_score"]
             ref_ai_score = ref_hits.iloc[0]["ai_predicted_vina_score"]
+            ref_id = ref_hits.iloc[0]["id"]
+            ref_delta = ref_hits.iloc[0]["delta_qm"]
             st.markdown(f"""
             <div class="glass-callout glass-callout-gold">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <div>
                         <span class="tag-badge tag-gold" style="font-size:12px;">REFERENCE DRUG VALIDATION SUCCESS</span>
-                        <h3 style="margin:8px 0 4px 0; color:#f8fafc; font-size:20px;">Nirmatrelvir (Paxlovid™) Secured Rank #{ref_rank_1}!</h3>
+                        <h3 style="margin:8px 0 4px 0; color:#f8fafc; font-size:20px;">Nirmatrelvir (Paxlovid™) [{ref_id}] Secured Rank #{ref_rank_1}!</h3>
                         <p style="margin:0; font-size:13px; color:#cbd5e1; line-height:1.5;">
-                            Quantum Rescoring boosted Nirmatrelvir binding score from <strong style="color:#38bdf8;">{ref_ai_score:.2f} kcal/mol</strong> (AI baseline) to <strong style="color:#34d399;">{ref_q_score:.2f} kcal/mol</strong> (Quantum Corrected), completely reversing the classical docking ranking error.
+                            Quantum Rescoring evaluated Nirmatrelvir ({ref_id}) at <strong style="color:#38bdf8;">{ref_ai_score:.2f} kcal/mol</strong> (AI baseline) to <strong style="color:#34d399;">{ref_q_score:.2f} kcal/mol</strong> (Quantum Corrected), reversing false negative docking ranks.
                         </p>
                     </div>
                     <div style="text-align:right;">
-                        <span style="font-size:30px; font-weight:800; color:#fbbf24; text-shadow:0 0 15px rgba(251, 191, 36, 0.4);">ΔE -4.5 kcal/mol</span><br>
+                        <span style="font-size:30px; font-weight:800; color:#fbbf24; text-shadow:0 0 15px rgba(251, 191, 36, 0.4);">ΔE {ref_delta:+.2f} kcal/mol</span><br>
                         <span style="font-size:11px; color:#94a3b8;">Covalent Nitrile Warhead Stabilization</span>
                     </div>
                 </div>
@@ -2029,7 +2050,7 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
 
         # Interactive Comparison Chart
         chart_df = q_df.copy()
-        chart_df["is_ref_label"] = chart_df["is_reference"].apply(lambda x: "Nirmatrelvir Reference" if str(x).lower() in ["yes", "true"] else "Active Finalist")
+        chart_df["is_ref_label"] = chart_df["is_reference"].apply(lambda x: "Nirmatrelvir Reference" if x else "Active Finalist")
 
         c1 = alt.Chart(chart_df).mark_bar(opacity=0.8, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
             x=alt.X('rank:O', title='Rank Order (Top 30)'),
@@ -2069,7 +2090,7 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
         display_df["quantum_corrected_score"] = display_df["quantum_corrected_score"].round(2)
         display_df["delta_qm"] = display_df["delta_qm"].round(2)
         display_df["candidate_type"] = display_df["is_reference"].apply(
-            lambda x: "Ref Drug (Nirmatrelvir)" if str(x).lower() in ["yes", "true"] else "Active Finalist"
+            lambda x: "Ref Drug (Nirmatrelvir)" if x else "Active Finalist"
         )
         display_cols = ["rank", "id", "candidate_type", "ai_predicted_vina_score", "quantum_corrected_score", "delta_qm", "smiles"]
 
