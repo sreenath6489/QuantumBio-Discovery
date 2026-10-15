@@ -1971,7 +1971,7 @@ elif selected_tab == "Tab 4: Quantum Results (Top 30 Shortlist)":
         chart_df = q_df.copy()
         chart_df["is_ref_label"] = chart_df["is_reference"].apply(lambda x: "Nirmatrelvir Reference" if str(x).lower() in ["yes", "true"] else "Active Finalist")
 
-        c1 = alt.Chart(chart_df).mark_bar(opacity=0.8, cornerRadiusTop=4).encode(
+        c1 = alt.Chart(chart_df).mark_bar(opacity=0.8, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
             x=alt.X('rank:O', title='Rank Order (Top 30)'),
             y=alt.Y('quantum_corrected_score:Q', title='Energy Score (kcal/mol, more negative = stronger)'),
             color=alt.Color('is_ref_label:N', scale=alt.Scale(domain=['Nirmatrelvir Reference', 'Active Finalist'], range=['#fbbf24', '#0ea5e9']), title='Candidate Class'),
